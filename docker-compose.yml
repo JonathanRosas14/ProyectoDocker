@@ -1,0 +1,41 @@
+version: "3.9" # use version 3.9 of docker-compose
+services: # esto especifica los servicios que se van a crear
+  backend: # esto especifica que se va a crear un servicio llamado backend
+    build: ./backend # esto especifica la ruta del Dockerfile para construir la imagen del backend
+    container_name: crud-backend # esto especifica el nombre del contenedor del backend
+    ports: # esto especifica los puertos que se van a mapear
+      - "3000:3000" # esto mapea el puerto 3000 del contenedor al puerto 3000 del host
+    env_file: ./backend/.env # esto especifica la ruta del archivo .env para el backend
+    volumes:  # esto especifica los volúmenes que se van a montar
+      - ./backend:/app # esto monta el directorio backend del host en el directorio /app del contenedor
+      - /app/node_modules # esto monta el directorio node_modules del contenedor para evitar conflictos
+    command: npm run dev  # esto especifica el comando que se va a ejecutar al iniciar el contenedor
+    depends_on: # esto especifica que el servicio backend depende del servicio db
+      - db # esto asegura que el servicio db se inicie antes que el servicio backend
+  
+  frontend: # esto especifica que se va a crear un servicio llamado frontend
+    build: ./frontend # esto especifica la ruta del Dockerfile para construir la imagen del frontend
+    container_name: crud-frontend  # esto especifica el nombre del contenedor del frontend
+    ports:  # esto especifica los puertos que se van a mapear
+      - "5173:5173" # esto mapea el puerto 5173 del contenedor al puerto 5173 del host
+    env_file: ./frontend/.env # esto especifica la ruta del archivo .env para el frontend
+    volumes: # esto especifica los volúmenes que se van a montar
+      - ./frontend:/app # esto monta el directorio frontend del host en el directorio /app del contenedor
+      - /app/node_modules # esto monta el directorio node_modules del contenedor para evitar conflictos
+    command: npm run dev -- --host # esto especifica el comando que se va a ejecutar al iniciar el contenedor
+    depends_on: # esto especifica que el servicio frontend depende del servicio backend
+      - backend # esto asegura que el servicio backend se inicie antes que el servicio frontend
+  db: # esto especifica que se va a crear un servicio llamado db
+    image: mysql:8.0 # esto especifica la imagen de MySQL que se va a usar
+    container_name: crud-database # esto especifica el nombre del contenedor de la base de datos
+    environment: # esto especifica las variables de entorno para la base de datos
+      MYSQL_ROOT_PASSWORD: 123123   # esto especifica la contraseña del usuario root de MySQL
+      MYSQL_DATABASE: mydatabase  # esto especifica el nombre de la base de datos que se va a crear
+    
+    ports: # esto especifica los puertos que se van a mapear
+      - "3308:3306"   # esto mapea el puerto 3306 del contenedor al puerto 3308 del host
+    volumes: # esto especifica los volúmenes que se van a montar
+      - db_data:/var/lib/mysql # esto monta un volumen llamado db_data en el directorio /var/lib/mysql del contenedor
+
+volumes: # esto especifica los volúmenes que se van a crear
+  db_data: # esto crea un volumen llamado db_data para persistir los datos de la base de datos
